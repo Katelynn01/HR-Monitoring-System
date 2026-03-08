@@ -14,6 +14,7 @@ export default function TimeLog() {
     const [actionLoading, setActionLoading] = useState(false);
     const [showConfirmOut, setShowConfirmOut] = useState(false);
     const [isHome, setIsHome] = useState(false);
+    const [isWeekend, setIsWeekend] = useState(false);
     const timerRef = useRef(null);
 
     useEffect(() => {
@@ -26,6 +27,11 @@ export default function TimeLog() {
 
     useEffect(() => {
         timerRef.current = setInterval(() => setCurrentTime(new Date()), 1000);
+
+        // Check if today is a weekend (0 = Sunday, 6 = Saturday)
+        const dayOfWeek = new Date().getDay();
+        setIsWeekend(dayOfWeek === 0 || dayOfWeek === 6);
+
         return () => clearInterval(timerRef.current);
     }, []);
 
@@ -189,18 +195,18 @@ export default function TimeLog() {
                         <button
                             className="clock-btn clock-in"
                             onClick={handleClockIn}
-                            disabled={isClockedIn || todayRecord?.timeOut || actionLoading || isOnLeave || isHome}
+                            disabled={isClockedIn || todayRecord?.timeOut || actionLoading || isOnLeave || isHome || isWeekend}
                         >
                             <LogIn size={22} />
-                            {actionLoading ? 'Processing...' : isOnLeave ? 'On Leave' : isHome ? 'Office Only' : 'Clock In'}
+                            {actionLoading ? 'Processing...' : isOnLeave ? 'On Leave' : isHome ? 'Office Only' : isWeekend ? 'Weekend' : 'Clock In'}
                         </button>
                         <button
                             className="clock-btn clock-out"
                             onClick={() => setShowConfirmOut(true)}
-                            disabled={!isClockedIn || actionLoading || isOnLeave || isHome}
+                            disabled={!isClockedIn || actionLoading || isOnLeave || isHome || isWeekend}
                         >
                             <LogOut size={22} />
-                            {actionLoading ? 'Processing...' : isHome ? 'Office Only' : 'Clock Out'}
+                            {actionLoading ? 'Processing...' : isOnLeave ? 'On Leave' : isHome ? 'Office Only' : isWeekend ? 'Weekend' : 'Clock Out'}
                         </button>
                     </div>
 
@@ -248,15 +254,23 @@ export default function TimeLog() {
                         </div>
                     )}
 
+                    {isWeekend && (
+                        <div style={{ marginTop: '20px', backgroundColor: '#fffbeb', padding: '12px', borderRadius: '8px', border: '1px solid #fde68a', color: '#b45309', fontSize: '14px', textAlign: 'center' }}>
+                            <strong>Weekend:</strong> Attendance recording is disabled on Saturdays and Sundays.
+                        </div>
+                    )}
+
                     <div className={`clock-status ${isClockedIn ? '' : 'clocked-out'}`}>
                         <span className={`status-dot ${isClockedIn ? '' : 'inactive'}`}></span>
-                        {isOnLeave
-                            ? "You are currently on an approved leave."
-                            : isClockedIn
-                                ? `Clocked in at ${todayRecord?.timeIn?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                                : todayRecord?.timeOut
-                                    ? `Today's shift completed (${todayRecord.totalHours?.toFixed(1)}h)`
-                                    : 'Not clocked in yet'}
+                        {isWeekend
+                            ? "Attendance is not required today."
+                            : isOnLeave
+                                ? "You are currently on an approved leave."
+                                : isClockedIn
+                                    ? `Clocked in at ${todayRecord?.timeIn?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                                    : todayRecord?.timeOut
+                                        ? `Today's shift completed (${todayRecord.totalHours?.toFixed(1)}h)`
+                                        : 'Not clocked in yet'}
                     </div>
                 </div>
             </div>

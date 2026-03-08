@@ -20,6 +20,7 @@ import EmployeeDashboard from './pages/employee/Dashboard';
 import TimeLog from './pages/employee/TimeLog';
 import MyAttendance from './pages/employee/MyAttendance';
 import LeaveBalance from './pages/employee/LeaveBalance';
+import EmployeeProfile from './pages/employee/Profile';
 
 function AppRoutes() {
   const { user, userProfile, loading } = useAuth();
@@ -63,6 +64,7 @@ function AppRoutes() {
         <Route path="time-log" element={<TimeLog />} />
         <Route path="my-attendance" element={<MyAttendance />} />
         <Route path="leave-balance" element={<LeaveBalance />} />
+        <Route path="profile" element={<EmployeeProfile />} />
       </Route>
 
       {/* Default redirect */}

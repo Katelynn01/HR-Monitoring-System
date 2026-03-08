@@ -12,7 +12,8 @@ import {
     Sun,
     LogOut,
     Menu,
-    X
+    X,
+    User
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import Logo from './Logo';
@@ -31,6 +32,7 @@ const employeeMenuItems = [
     { path: '/employee/time-log', icon: Clock, label: 'Time Log' },
     { path: '/employee/my-attendance', icon: ClipboardList, label: 'My Attendance' },
     { path: '/employee/leave-balance', icon: CalendarCheck, label: 'Leave Balance' },
+    { path: '/employee/profile', icon: User, label: 'My Profile' },
 ];
 
 export default function Sidebar({ collapsed, setCollapsed }) {
