@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { db } from '../../firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { Shield, Clock, User, FileText } from 'lucide-react';
+import LoadingScreen from '../../components/LoadingScreen';
 
 export default function AuditTrail() {
     const [logs, setLogs] = useState([]);
@@ -46,9 +47,7 @@ export default function AuditTrail() {
         return <User size={18} />;
     }
 
-    if (loading) {
-        return <div className="loading-screen"><div className="loading-spinner"></div><p>Loading audit trail...</p></div>;
-    }
+    if (loading) return <LoadingScreen message="Loading audit trail..." />;
 
     return (
         <div>

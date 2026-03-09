@@ -3,6 +3,7 @@ import { db } from '../../firebase';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { ClipboardList, Search, Lock, Filter } from 'lucide-react';
 import EmployeeHistoryModal from '../../components/EmployeeHistoryModal';
+import LoadingScreen from '../../components/LoadingScreen';
 
 export default function Attendance() {
     const [records, setRecords] = useState([]);
@@ -55,9 +56,7 @@ export default function Attendance() {
         return matchSearch && matchDate;
     });
 
-    if (loading) {
-        return <div className="loading-screen"><div className="loading-spinner"></div><p>Loading records...</p></div>;
-    }
+    if (loading) return <LoadingScreen message="Loading records..." />;
 
     return (
         <div>

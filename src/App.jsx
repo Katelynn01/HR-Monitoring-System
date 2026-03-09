@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
+import LoadingScreen from './components/LoadingScreen';
 
 // Auth pages
 import Login from './pages/Login';
@@ -26,12 +27,7 @@ function AppRoutes() {
   const { user, userProfile, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-spinner"></div>
-        <p>Loading HR Monitor...</p>
-      </div>
-    );
+    return <LoadingScreen message="Loading HR Monitor..." />;
   }
 
   return (

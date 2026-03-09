@@ -88,8 +88,8 @@ export default function Reports() {
                 }
                 daysPerEmployee[uid].days += 1;
 
-                // Early bird detection (before 11:30 AM)
-                const WORK_HOUR = 11, WORK_MINUTE = 30;
+                // Early bird detection (before 8:30 AM)
+                const WORK_HOUR = 8, WORK_MINUTE = 30;
                 if (data.timeIn) {
                     const timeInDate = data.timeIn.toDate?.() || new Date(data.timeIn);
                     const h = timeInDate.getHours();
@@ -299,7 +299,7 @@ export default function Reports() {
                         <div className="card-header">
                             <h3><Sunrise size={18} /> Early Birds Summary</h3>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>Official start: 11:30 AM</span>
+                                <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>Official start: 8:30 AM</span>
                                 {earlyBirdsData.length > 0 && (
                                     <button className="btn btn-accent btn-sm" onClick={exportEarlyBirdsCSV}>
                                         <Download size={14} /> Export CSV

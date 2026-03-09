@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase';
-import { collection, getDocs, doc, updateDoc, query, where } from 'firebase/firestore';
-import { Users, Search, Edit3, X, Save, Leaf } from 'lucide-react';
+import { collection, getDocs, doc, updateDoc, query, where, deleteDoc } from 'firebase/firestore';
+import { Users, Search, Edit3, X, Save, Leaf, Trash2 } from 'lucide-react';
 import EmployeeHistoryModal from '../../components/EmployeeHistoryModal';
+import LoadingScreen from '../../components/LoadingScreen';
 
 export default function Employees() {
     const [employees, setEmployees] = useState([]);
@@ -11,6 +12,7 @@ export default function Employees() {
     const [editingId, setEditingId] = useState(null);
     const [editData, setEditData] = useState({});
     const [selectedHistoryUser, setSelectedHistoryUser] = useState(null);
+    const [deletingId, setDeletingId] = useState(null);
 
     useEffect(() => { fetchEmployees(); }, []);
 
@@ -55,15 +57,24 @@ export default function Employees() {
         }
     }
 
+    async function confirmDelete() {
+        if (!deletingId) return;
+        try {
+            await deleteDoc(doc(db, 'users', deletingId));
+            setDeletingId(null);
+            fetchEmployees();
+        } catch (err) {
+            console.error('Error deleting employee:', err);
+        }
+    }
+
     const filtered = employees.filter(e =>
         e.name?.toLowerCase().includes(search.toLowerCase()) ||
         e.email?.toLowerCase().includes(search.toLowerCase()) ||
         e.department?.toLowerCase().includes(search.toLowerCase())
     );
 
-    if (loading) {
-        return <div className="loading-screen"><div className="loading-spinner"></div><p>Loading employees...</p></div>;
-    }
+    if (loading) return <LoadingScreen message="Loading employees..." />;
 
     return (
         <div>
@@ -139,7 +150,10 @@ export default function Employees() {
                                                 <td>{emp.leaveCredits?.sick ?? 10}</td>
                                                 <td>{emp.leaveCredits?.personal ?? 5}</td>
                                                 <td>
-                                                    <button className="btn btn-secondary btn-sm" onClick={() => startEdit(emp)}><Edit3 size={14} /> Edit</button>
+                                                    <div style={{ display: 'flex', gap: 8 }}>
+                                                        <button className="btn btn-secondary btn-sm" onClick={() => startEdit(emp)}><Edit3 size={14} /> Edit</button>
+                                                        <button className="btn btn-danger btn-sm" onClick={() => setDeletingId(emp.id)}><Trash2 size={14} /> Delete</button>
+                                                    </div>
                                                 </td>
                                             </>
                                         )}
@@ -156,6 +170,26 @@ export default function Employees() {
                 onClose={() => setSelectedHistoryUser(null)}
                 employee={selectedHistoryUser}
             />
+
+            {deletingId && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center', zIndex: 9999
+                }}>
+                    <div style={{
+                        backgroundColor: '#ffffff', borderRadius: '12px', width: '90%', maxWidth: '400px',
+                        padding: '24px', boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
+                    }}>
+                        <h2 style={{ marginTop: 0, color: '#1f2937', fontSize: '1.25rem' }}>Confirm Delete</h2>
+                        <p style={{ color: '#4b5563', margin: '16px 0 24px' }}>Are you sure you want to delete this employee? This action cannot be undone.</p>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                            <button className="btn btn-secondary" onClick={() => setDeletingId(null)}>Cancel</button>
+                            <button className="btn btn-danger" onClick={confirmDelete}>Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

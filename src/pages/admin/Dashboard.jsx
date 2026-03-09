@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
 import { collection, query, getDocs, where, Timestamp } from 'firebase/firestore';
 import { Users, UserCheck, Clock, CalendarOff, TrendingUp, Sprout, Sunrise } from 'lucide-react';
+import LoadingScreen from '../../components/LoadingScreen';
 import { Bar } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -16,6 +18,7 @@ import {
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function AdminDashboard() {
+    const navigate = useNavigate();
     const [stats, setStats] = useState({
         totalEmployees: 0,
         presentToday: 0,
@@ -188,9 +191,7 @@ export default function AdminDashboard() {
         }
     };
 
-    if (loading) {
-        return <div className="loading-screen"><div className="loading-spinner"></div><p>Loading dashboard...</p></div>;
-    }
+    if (loading) return <LoadingScreen message="Loading dashboard..." />;
 
     return (
         <div>
@@ -210,7 +211,11 @@ export default function AdminDashboard() {
                     <div className="stat-card-value">{stats.totalEmployees}</div>
                     <div className="stat-card-label">Total Employees</div>
                 </div>
-                <div className="stat-card">
+                <div
+                    className="stat-card clickable"
+                    onClick={() => navigate('/admin/attendance')}
+                    style={{ cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
+                >
                     <div className="stat-card-header">
                         <div className="stat-card-icon yellow"><UserCheck size={24} /></div>
                         <span className="stat-card-change positive">Today</span>
@@ -218,14 +223,22 @@ export default function AdminDashboard() {
                     <div className="stat-card-value">{stats.presentToday}</div>
                     <div className="stat-card-label">Present Today</div>
                 </div>
-                <div className="stat-card">
+                <div
+                    className="stat-card clickable"
+                    onClick={() => navigate('/admin/leave-requests')}
+                    style={{ cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
+                >
                     <div className="stat-card-header">
                         <div className="stat-card-icon blue"><CalendarOff size={24} /></div>
                     </div>
                     <div className="stat-card-value">{stats.onLeave}</div>
                     <div className="stat-card-label">On Leave</div>
                 </div>
-                <div className="stat-card">
+                <div
+                    className="stat-card clickable"
+                    onClick={() => navigate('/admin/leave-requests')}
+                    style={{ cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
+                >
                     <div className="stat-card-header">
                         <div className="stat-card-icon orange"><Clock size={24} /></div>
                         {stats.pendingRequests > 0 && <span className="stat-card-change negative">{stats.pendingRequests} new</span>}

@@ -3,6 +3,7 @@ import { db } from '../../firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
 import { Sprout, Clock, CalendarCheck, TreePine } from 'lucide-react';
+import LoadingScreen from '../../components/LoadingScreen';
 
 export default function EmployeeDashboard() {
     const { user, userProfile } = useAuth();
@@ -55,9 +56,7 @@ export default function EmployeeDashboard() {
         setLoading(false);
     }
 
-    if (loading) {
-        return <div className="loading-screen"><div className="loading-spinner"></div><p>Loading dashboard...</p></div>;
-    }
+    if (loading) return <LoadingScreen message="Loading dashboard..." />;
 
     const credits = userProfile?.leaveCredits || { vacation: 15, sick: 10, personal: 5 };
 

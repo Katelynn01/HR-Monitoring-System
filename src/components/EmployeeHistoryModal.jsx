@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react';
-import { X, Clock, CalendarCheck, Check, AlertCircle, Download } from 'lucide-react';
+import { X, HeartPulse, Phone, Sunrise, Clock } from 'lucide-react';
 import { db } from '../firebase';
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 
 export default function EmployeeHistoryModal({ isOpen, onClose, employee }) {
-    const [attendance, setAttendance] = useState([]);
-    const [leaves, setLeaves] = useState([]);
+    const [earlyBirds, setEarlyBirds] = useState([]);
+    const [overtimes, setOvertimes] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [tab, setTab] = useState('attendance'); // 'attendance' or 'leaves'
 
     useEffect(() => {
         if (isOpen && employee) {
-            setTab('attendance');
             fetchData();
         }
     }, [isOpen, employee]);
@@ -22,68 +20,60 @@ export default function EmployeeHistoryModal({ isOpen, onClose, employee }) {
             // Fetch Attendance
             const attQ = query(collection(db, 'attendance'), where('userId', '==', employee.id));
             const attSnap = await getDocs(attQ);
-            const attList = [];
+
+            const WORK_HOUR = 8, WORK_MINUTE = 30;
+            const OUT_HOUR = 17, OUT_MINUTE = 30;
+            const earlyList = [];
+            const overtimeList = [];
+
             attSnap.forEach(d => {
                 const data = d.data();
-                attList.push({
-                    id: d.id,
-                    date: data.date?.toDate?.() || null,
-                    dateStr: data.date?.toDate?.()?.toLocaleDateString() || '—',
-                    timeIn: data.timeIn?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '—',
-                    timeOut: data.timeOut?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || 'Active',
-                    totalHours: data.totalHours != null ? data.totalHours.toFixed(1) : '—'
-                });
-            });
-            attList.sort((a, b) => (b.date || 0) - (a.date || 0));
-            setAttendance(attList);
+                if (data.timeIn) {
+                    const timeInDate = data.timeIn?.toDate?.() || new Date(data.timeIn);
+                    const h = timeInDate.getHours();
+                    const m = timeInDate.getMinutes();
+                    const isEarly = h < WORK_HOUR || (h === WORK_HOUR && m < WORK_MINUTE);
 
-            // Fetch Leaves
-            const leaveQ = query(collection(db, 'leaveRequests'), where('userId', '==', employee.id));
-            const leaveSnap = await getDocs(leaveQ);
-            const leaveList = [];
-            leaveSnap.forEach(d => {
-                const data = d.data();
-                leaveList.push({
-                    id: d.id,
-                    type: data.type,
-                    status: data.status,
-                    createdAt: data.createdAt?.toDate?.() || new Date(0),
-                    startDateStr: data.startDate?.toDate?.()?.toLocaleDateString() || data.startDate,
-                    endDateStr: data.endDate?.toDate?.()?.toLocaleDateString() || data.endDate,
-                    reason: data.reason
-                });
+                    if (isEarly) {
+                        const minsEarly = (WORK_HOUR * 60 + WORK_MINUTE) - (h * 60 + m);
+                        earlyList.push({
+                            id: d.id,
+                            date: data.date?.toDate?.() || null,
+                            dateStr: data.date?.toDate?.()?.toLocaleDateString() || '—',
+                            timeIn: timeInDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                            minsEarly
+                        });
+                    }
+                }
+
+                if (data.timeOut && data.timeOut !== 'Active') {
+                    const timeOutDate = data.timeOut?.toDate?.() || new Date(data.timeOut);
+                    const hOut = timeOutDate.getHours();
+                    const mOut = timeOutDate.getMinutes();
+                    const isOvertime = hOut > OUT_HOUR || (hOut === OUT_HOUR && mOut > OUT_MINUTE);
+
+                    if (isOvertime) {
+                        const minsOvertime = (hOut * 60 + mOut) - (OUT_HOUR * 60 + OUT_MINUTE);
+                        overtimeList.push({
+                            id: `${d.id}_ot`,
+                            date: data.date?.toDate?.() || null,
+                            dateStr: data.date?.toDate?.()?.toLocaleDateString() || '—',
+                            timeOut: timeOutDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                            minsOvertime
+                        });
+                    }
+                }
             });
-            leaveList.sort((a, b) => b.createdAt - a.createdAt);
-            setLeaves(leaveList);
+
+            earlyList.sort((a, b) => (b.date || 0) - (a.date || 0));
+            overtimeList.sort((a, b) => (b.date || 0) - (a.date || 0));
+
+            setEarlyBirds(earlyList);
+            setOvertimes(overtimeList);
         } catch (err) {
             console.error('Error fetching history:', err);
         }
         setLoading(false);
-    }
-
-    function handleExportCSV() {
-        let csvContent = "data:text/csv;charset=utf-8,";
-        if (tab === 'attendance') {
-            csvContent += "Date,Time In,Time Out,Total Hours\n";
-            attendance.forEach(a => {
-                const row = [`"${a.dateStr}"`, `"${a.timeIn}"`, `"${a.timeOut}"`, `"${a.totalHours}"`].join(",");
-                csvContent += row + "\n";
-            });
-        } else {
-            csvContent += "Type,Start Date,End Date,Status,Reason\n";
-            leaves.forEach(l => {
-                const row = [`"${l.type}"`, `"${l.startDateStr}"`, `"${l.endDateStr}"`, `"${l.status}"`, `"${(l.reason || '').replace(/"/g, '""')}"`].join(",");
-                csvContent += row + "\n";
-            });
-        }
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `${employee.name.replace(/\s+/g, '_')}_${tab}_history.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
     }
 
     if (!isOpen || !employee) return null;
@@ -103,11 +93,11 @@ export default function EmployeeHistoryModal({ isOpen, onClose, employee }) {
         }}>
             <div style={{
                 backgroundColor: '#ffffff',
-                border: '4px solid #22c55e', // green border
+                border: '4px solid #22c55e',
                 borderRadius: '12px',
                 width: '95%',
                 maxWidth: '700px',
-                height: '80vh',
+                height: '85vh',
                 display: 'flex',
                 flexDirection: 'column',
                 boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
@@ -118,157 +108,135 @@ export default function EmployeeHistoryModal({ isOpen, onClose, employee }) {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: '20px 24px',
-                    borderBottom: '1px solid #e5e7eb'
+                    borderBottom: '1px solid #e5e7eb',
+                    backgroundColor: '#f9fafb',
+                    borderRadius: '8px 8px 0 0'
                 }}>
                     <div>
                         <h2 style={{ color: '#166534', margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>{employee.name}</h2>
-                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>{employee.department} • History</span>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>{employee.department || '—'}</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <button
-                            onClick={handleExportCSV}
-                            style={{
-                                background: '#f0fdf4',
-                                border: '1px solid #bbf7d0',
-                                cursor: 'pointer',
-                                color: '#166534',
-                                padding: '6px 12px',
-                                borderRadius: '6px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                fontSize: '0.875rem',
-                                fontWeight: 600,
-                                transition: 'background 0.2s'
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.background = '#dcfce7'}
-                            onMouseOut={(e) => e.currentTarget.style.background = '#f0fdf4'}
-                        >
-                            <Download size={16} /> Export CSV
-                        </button>
-                        <button
-                            onClick={onClose}
-                            style={{
-                                background: 'none',
-                                border: 'none',
-                                cursor: 'pointer',
-                                color: '#6b7280',
-                                padding: '4px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                        >
-                            <X size={24} />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Tabs */}
-                <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
                     <button
-                        onClick={() => setTab('attendance')}
+                        onClick={onClose}
                         style={{
-                            flex: 1,
-                            padding: '12px',
-                            background: tab === 'attendance' ? '#ffffff' : 'transparent',
+                            background: 'none',
                             border: 'none',
-                            borderBottom: tab === 'attendance' ? '3px solid #22c55e' : '3px solid transparent',
-                            color: tab === 'attendance' ? '#166534' : '#6b7280',
-                            fontWeight: 600,
                             cursor: 'pointer',
+                            color: '#6b7280',
+                            padding: '4px',
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px'
+                            justifyContent: 'center'
                         }}
                     >
-                        <Clock size={16} /> Attendance Log
-                    </button>
-                    <button
-                        onClick={() => setTab('leaves')}
-                        style={{
-                            flex: 1,
-                            padding: '12px',
-                            background: tab === 'leaves' ? '#ffffff' : 'transparent',
-                            border: 'none',
-                            borderBottom: tab === 'leaves' ? '3px solid #facc15' : '3px solid transparent',
-                            color: tab === 'leaves' ? '#ca8a04' : '#6b7280',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px'
-                        }}
-                    >
-                        <CalendarCheck size={16} /> Leave Requests
+                        <X size={24} />
                     </button>
                 </div>
 
                 {/* Content Area */}
-                <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
+                <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
                     {loading ? (
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#6b7280' }}>
                             Loading data...
                         </div>
-                    ) : tab === 'attendance' ? (
-                        <div>
-                            {attendance.length === 0 ? (
-                                <p style={{ textAlign: 'center', color: '#6b7280', marginTop: '40px' }}>No attendance records found.</p>
-                            ) : (
-                                <table className="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Time In</th>
-                                            <th>Time Out</th>
-                                            <th>Hours</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {attendance.map(a => (
-                                            <tr key={a.id}>
-                                                <td>{a.dateStr}</td>
-                                                <td><span className="badge badge-success">{a.timeIn}</span></td>
-                                                <td><span className={`badge ${a.timeOut === 'Active' ? 'badge-warning' : 'badge-info'}`}>{a.timeOut}</span></td>
-                                                <td style={{ fontWeight: 600 }}>{a.totalHours}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
                     ) : (
-                        <div>
-                            {leaves.length === 0 ? (
-                                <p style={{ textAlign: 'center', color: '#6b7280', marginTop: '40px' }}>No leave requests found.</p>
-                            ) : (
-                                <table className="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Type</th>
-                                            <th>From</th>
-                                            <th>To</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {leaves.map(r => (
-                                            <tr key={r.id}>
-                                                <td><span className="badge badge-info" style={{ textTransform: 'capitalize' }}>{r.type}</span></td>
-                                                <td>{r.startDateStr}</td>
-                                                <td>{r.endDateStr}</td>
-                                                <td>
-                                                    <span className={`badge ${r.status === 'approved' ? 'badge-success' : r.status === 'rejected' ? 'badge-danger' : 'badge-warning'}`}>
-                                                        {r.status}
-                                                    </span>
-                                                </td>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                            {/* Emergency Contact Section */}
+                            <div>
+                                <h3 style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: '8px', color: '#374151', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    Emergency Contact
+                                </h3>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', backgroundColor: '#f0fdf4', padding: '16px', borderRadius: '8px', border: '1px solid #dcfce7' }}>
+                                    <div>
+                                        <p style={{ margin: '0 0 4px', fontSize: '0.875rem', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+                                            <HeartPulse size={14} /> Contact Name
+                                        </p>
+                                        <p style={{ margin: 0, fontWeight: 500, color: employee.emergencyContactName ? '#111827' : '#9ca3af', fontStyle: employee.emergencyContactName ? 'normal' : 'italic', fontSize: '1rem' }}>
+                                            {employee.emergencyContactName || 'Not Set'}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p style={{ margin: '0 0 4px', fontSize: '0.875rem', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+                                            <Phone size={14} /> Contact Number
+                                        </p>
+                                        <p style={{ margin: 0, fontWeight: 500, color: employee.emergencyContactNumber ? '#111827' : '#9ca3af', fontStyle: employee.emergencyContactNumber ? 'normal' : 'italic', fontSize: '1rem' }}>
+                                            {employee.emergencyContactNumber || 'Not Set'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Early Bird Log Section */}
+                            <div>
+                                <h3 style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: '8px', color: '#374151', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Sunrise size={18} color="#eab308" /> Early Bird Records
+                                </h3>
+                                {earlyBirds.length === 0 ? (
+                                    <div style={{ textAlign: 'center', color: '#6b7280', padding: '32px 0', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px dashed #d1d5db' }}>
+                                        <Sunrise size={32} style={{ color: '#d1d5db', marginBottom: '8px' }} />
+                                        <p style={{ margin: 0 }}>No early arrival records found.</p>
+                                    </div>
+                                ) : (
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Time In</th>
+                                                <th>Mins Early (Before 8:30)</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
+                                        </thead>
+                                        <tbody>
+                                            {earlyBirds.map(record => (
+                                                <tr key={record.id}>
+                                                    <td style={{ fontWeight: 500 }}>{record.dateStr}</td>
+                                                    <td><span className="badge badge-success">{record.timeIn}</span></td>
+                                                    <td style={{ color: '#16a34a', fontWeight: 600 }}>
+                                                        {record.minsEarly >= 60
+                                                            ? `${Math.floor(record.minsEarly / 60)}h ${record.minsEarly % 60}m`
+                                                            : `${record.minsEarly}m`}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+
+                            {/* Overtime Log Section */}
+                            <div>
+                                <h3 style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: '8px', color: '#374151', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Clock size={18} color="#f97316" /> Overtime Records
+                                </h3>
+                                {overtimes.length === 0 ? (
+                                    <div style={{ textAlign: 'center', color: '#6b7280', padding: '32px 0', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px dashed #d1d5db' }}>
+                                        <Clock size={32} style={{ color: '#d1d5db', marginBottom: '8px' }} />
+                                        <p style={{ margin: 0 }}>No overtime records found.</p>
+                                    </div>
+                                ) : (
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Time Out</th>
+                                                <th>Mins Overtime (After 5:30 PM)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {overtimes.map(record => (
+                                                <tr key={record.id}>
+                                                    <td style={{ fontWeight: 500 }}>{record.dateStr}</td>
+                                                    <td><span className="badge badge-warning">{record.timeOut}</span></td>
+                                                    <td style={{ color: '#ea580c', fontWeight: 600 }}>
+                                                        {record.minsOvertime >= 60
+                                                            ? `${Math.floor(record.minsOvertime / 60)}h ${record.minsOvertime % 60}m`
+                                                            : `${record.minsOvertime}m`}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>

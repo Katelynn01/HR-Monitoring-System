@@ -4,6 +4,7 @@ import { collection, getDocs, doc, updateDoc, query, where, addDoc, serverTimest
 import { useAuth } from '../../contexts/AuthContext';
 import { CalendarCheck, Check, X, Clock, AlertCircle } from 'lucide-react';
 import ReasonModal from '../../components/ReasonModal';
+import LoadingScreen from '../../components/LoadingScreen';
 
 export default function LeaveRequests() {
     const [requests, setRequests] = useState([]);
@@ -140,9 +141,7 @@ export default function LeaveRequests() {
 
     const filtered = filter === 'all' ? requests : requests.filter(r => r.status === filter);
 
-    if (loading) {
-        return <div className="loading-screen"><div className="loading-spinner"></div><p>Loading requests...</p></div>;
-    }
+    if (loading) return <LoadingScreen message="Loading requests..." />;
 
     return (
         <div>

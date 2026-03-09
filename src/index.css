@@ -59,7 +59,7 @@
   --gradient-primary: linear-gradient(135deg, var(--green-600) 0%, var(--green-400) 100%);
   --gradient-accent: linear-gradient(135deg, var(--yellow-400) 0%, var(--yellow-300) 100%);
   --gradient-hero: linear-gradient(135deg, var(--green-700) 0%, var(--green-500) 50%, var(--yellow-400) 100%);
-  --gradient-card: linear-gradient(145deg, rgba(255,255,255,0.9), rgba(240,253,244,0.6));
+  --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(240, 253, 244, 0.6));
   --gradient-sidebar: linear-gradient(180deg, var(--green-800) 0%, var(--green-900) 100%);
 
   /* Shadows */
@@ -87,7 +87,9 @@
 /* ════════════════════════════════════════════
    RESET & BASE
    ════════════════════════════════════════════ */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -120,10 +122,23 @@ button {
   font-size: inherit;
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
   font-family: inherit;
   font-size: inherit;
 }
+
+/* Hide browser-native password reveal button */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
+input::-webkit-reveal {
+  display: none;
+}
+
 
 /* ════════════════════════════════════════════
    LOADING SCREEN
@@ -134,21 +149,20 @@ input, select, textarea {
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background: var(--gradient-card);
+  background: #ffffff;
   gap: 16px;
 }
 
 .loading-spinner {
-  width: 44px;
-  height: 44px;
-  border: 4px solid var(--green-100);
-  border-top-color: var(--green-600);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+  width: 150px;
+  height: 150px;
+  background-image: url("/tractor-loading.gif");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  border: none;
+  animation: none;
+  background-color: transparent;
 }
 
 .loading-screen p {
@@ -177,7 +191,7 @@ input, select, textarea {
   right: -20%;
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(34,197,94,0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.12) 0%, transparent 70%);
   border-radius: 50%;
   animation: float 8s ease-in-out infinite;
 }
@@ -189,14 +203,21 @@ input, select, textarea {
   left: -10%;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(250,204,21,0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(250, 204, 21, 0.1) 0%, transparent 70%);
   border-radius: 50%;
   animation: float 10s ease-in-out infinite reverse;
 }
 
 @keyframes float {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(20px, -30px) scale(1.05); }
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(20px, -30px) scale(1.05);
+  }
 }
 
 .auth-card {
@@ -270,7 +291,7 @@ input, select, textarea {
 .form-input:focus {
   border-color: var(--green-400);
   background: var(--white);
-  box-shadow: 0 0 0 3px rgba(34,197,94,0.1);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
 }
 
 .form-input::placeholder {
@@ -290,7 +311,7 @@ input, select, textarea {
 
 .form-select:focus {
   border-color: var(--green-400);
-  box-shadow: 0 0 0 3px rgba(34,197,94,0.1);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
 }
 
 .btn {
@@ -310,12 +331,12 @@ input, select, textarea {
 .btn-primary {
   background: var(--gradient-primary);
   color: white;
-  box-shadow: 0 2px 8px rgba(22,163,74,0.3);
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(22,163,74,0.4);
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.4);
 }
 
 .btn-primary:active {
@@ -347,7 +368,7 @@ input, select, textarea {
 
 .btn-accent:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(234,179,8,0.3);
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3);
 }
 
 .btn-danger {
@@ -374,7 +395,7 @@ input, select, textarea {
   padding: 12px 16px;
   border-radius: var(--radius-sm);
   font-size: 13px;
-  border: 1px solid rgba(239,68,68,0.2);
+  border: 1px solid rgba(239, 68, 68, 0.2);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -435,25 +456,16 @@ input, select, textarea {
 .sidebar-top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: 20px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-.sidebar-toggle {
-  background: rgba(255,255,255,0.1);
-  color: white;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   transition: background var(--transition-fast);
+  border-radius: var(--radius-sm);
+  user-select: none;
 }
 
-.sidebar-toggle:hover {
-  background: rgba(255,255,255,0.2);
+.sidebar-top:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .sidebar-decoration {
@@ -478,8 +490,15 @@ input, select, textarea {
 }
 
 @keyframes sway {
-  0%, 100% { transform: rotate(-5deg); }
-  50% { transform: rotate(5deg); }
+
+  0%,
+  100% {
+    transform: rotate(-5deg);
+  }
+
+  50% {
+    transform: rotate(5deg);
+  }
 }
 
 .sidebar-nav {
@@ -491,7 +510,7 @@ input, select, textarea {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  color: rgba(255,255,255,0.4);
+  color: rgba(255, 255, 255, 0.4);
   padding: 12px 12px 8px;
   font-weight: 700;
 }
@@ -502,7 +521,7 @@ input, select, textarea {
   gap: 12px;
   padding: 11px 14px;
   border-radius: var(--radius-sm);
-  color: rgba(255,255,255,0.7);
+  color: rgba(255, 255, 255, 0.7);
   transition: all var(--transition-fast);
   margin-bottom: 2px;
   font-weight: 500;
@@ -511,19 +530,19 @@ input, select, textarea {
 }
 
 .nav-item:hover {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
   color: white;
 }
 
 .nav-item.active {
-  background: rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.15);
   color: white;
   box-shadow: inset 3px 0 0 var(--yellow-400);
 }
 
 .sidebar-bottom {
   padding: 16px;
-  border-top: 1px solid rgba(255,255,255,0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .user-info {
@@ -563,17 +582,17 @@ input, select, textarea {
 
 .user-role {
   font-size: 12px;
-  color: rgba(255,255,255,0.5);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .logout-btn {
-  color: rgba(255,255,255,0.6) !important;
+  color: rgba(255, 255, 255, 0.6) !important;
   background: transparent;
   width: 100%;
 }
 
 .logout-btn:hover {
-  background: rgba(239,68,68,0.15) !important;
+  background: rgba(239, 68, 68, 0.15) !important;
   color: #fca5a5 !important;
 }
 
@@ -685,7 +704,7 @@ input, select, textarea {
 .header-search:focus-within {
   border-color: var(--green-300);
   background: var(--white);
-  box-shadow: 0 0 0 3px rgba(34,197,94,0.08);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08);
 }
 
 .header-search input {
@@ -775,6 +794,15 @@ input, select, textarea {
 .stat-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
+}
+
+.stat-card.clickable {
+  cursor: pointer;
+}
+
+.stat-card.clickable:hover {
+  transform: translateY(-4px);
+  border-color: var(--primary-light);
 }
 
 .stat-card-header {
@@ -1038,7 +1066,7 @@ input, select, textarea {
 
 .filter-input:focus {
   border-color: var(--green-400);
-  box-shadow: 0 0 0 3px rgba(34,197,94,0.08);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08);
 }
 
 /* ════════════════════════════════════════════
@@ -1084,23 +1112,23 @@ input, select, textarea {
 .clock-btn.clock-in {
   background: var(--gradient-primary);
   color: white;
-  box-shadow: 0 4px 16px rgba(22,163,74,0.3);
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.3);
 }
 
 .clock-btn.clock-in:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(22,163,74,0.4);
+  box-shadow: 0 8px 24px rgba(22, 163, 74, 0.4);
 }
 
 .clock-btn.clock-out {
   background: var(--gradient-accent);
   color: var(--gray-800);
-  box-shadow: 0 4px 16px rgba(234,179,8,0.3);
+  box-shadow: 0 4px 16px rgba(234, 179, 8, 0.3);
 }
 
 .clock-btn.clock-out:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(234,179,8,0.4);
+  box-shadow: 0 8px 24px rgba(234, 179, 8, 0.4);
 }
 
 .clock-btn:disabled {
@@ -1143,8 +1171,15 @@ input, select, textarea {
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
 }
 
 /* ════════════════════════════════════════════
@@ -1242,7 +1277,7 @@ input, select, textarea {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1252,8 +1287,13 @@ input, select, textarea {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .modal {
@@ -1268,8 +1308,15 @@ input, select, textarea {
 }
 
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .modal-header {
@@ -1406,7 +1453,7 @@ input, select, textarea {
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     z-index: 90;
     opacity: 0;
     pointer-events: none;

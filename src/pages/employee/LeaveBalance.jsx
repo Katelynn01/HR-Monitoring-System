@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { collection, addDoc, getDocs, query, where, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { CalendarCheck, TreePine, Sprout, Send, Clock, Check, X } from 'lucide-react';
 import ReasonModal from '../../components/ReasonModal';
+import LoadingScreen from '../../components/LoadingScreen';
 
 export default function LeaveBalance() {
     const { user, userProfile } = useAuth();
@@ -140,9 +141,7 @@ export default function LeaveBalance() {
 
     const credits = userProfile?.leaveCredits || { vacation: 15, sick: 10, personal: 5 };
 
-    if (loading) {
-        return <div className="loading-screen"><div className="loading-spinner"></div><p>Loading...</p></div>;
-    }
+    if (loading) return <LoadingScreen />;
 
     return (
         <div>

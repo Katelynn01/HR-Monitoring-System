@@ -11,8 +11,6 @@ import {
     Leaf,
     Sun,
     LogOut,
-    Menu,
-    X,
     User
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -43,11 +41,13 @@ export default function Sidebar({ collapsed, setCollapsed }) {
         <>
             <div className={`sidebar-overlay ${!collapsed ? 'active' : ''}`} onClick={() => setCollapsed(true)} />
             <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
-                <div className="sidebar-top">
+                <div
+                    className="sidebar-top"
+                    onClick={() => setCollapsed(!collapsed)}
+                    title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    style={{ cursor: 'pointer' }}
+                >
                     <Logo collapsed={collapsed} />
-                    <button className="sidebar-toggle" onClick={() => setCollapsed(!collapsed)}>
-                        {collapsed ? <Menu size={20} /> : <X size={20} />}
-                    </button>
                 </div>
 
                 <div className="sidebar-decoration">

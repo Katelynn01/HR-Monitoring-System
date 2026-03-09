@@ -8,8 +8,8 @@ export default function Logo({ collapsed }) {
             </div>
             {!collapsed && (
                 <div className="logo-text">
-                    <span className="logo-hr">HR</span>
-                    <span className="logo-monitor">Monitor</span>
+                    <span className="logo-hr">GEMINI</span>
+                    <span className="logo-monitor">Agri Farm Solutions Corp.</span>
                 </div>
             )}
         </div>

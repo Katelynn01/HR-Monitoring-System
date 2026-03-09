@@ -3,6 +3,7 @@ import { db } from '../../firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { collection, addDoc, getDocs, query, where, Timestamp, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { Clock, LogIn, LogOut, Sprout } from 'lucide-react';
+import LoadingScreen from '../../components/LoadingScreen';
 
 export default function TimeLog() {
     const { user, userProfile } = useAuth();
@@ -174,7 +175,7 @@ export default function TimeLog() {
     const dateStr = currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
     if (loading) {
-        return <div className="loading-screen"><div className="loading-spinner"></div><p>Loading...</p></div>;
+        return <LoadingScreen />;
     }
 
     return (

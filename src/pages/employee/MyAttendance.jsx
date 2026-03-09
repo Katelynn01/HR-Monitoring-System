@@ -3,6 +3,7 @@ import { db } from '../../firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { ClipboardList, Lock } from 'lucide-react';
+import LoadingScreen from '../../components/LoadingScreen';
 
 export default function MyAttendance() {
     const { user } = useAuth();
@@ -47,9 +48,7 @@ export default function MyAttendance() {
     const filtered = monthFilter ? records.filter(r => r.month === monthFilter) : records;
     const totalHours = filtered.reduce((sum, r) => sum + (parseFloat(r.totalHours) || 0), 0);
 
-    if (loading) {
-        return <div className="loading-screen"><div className="loading-spinner"></div><p>Loading records...</p></div>;
-    }
+    if (loading) return <LoadingScreen message="Loading records..." />;
 
     return (
         <div>
