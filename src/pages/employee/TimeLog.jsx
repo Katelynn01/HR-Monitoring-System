@@ -21,7 +21,7 @@ export default function TimeLog() {
     useEffect(() => {
         const hostname = window.location.hostname;
         // Accessing via localhost, 127.0.0.1, or the official work IP is considered "Office"
-        const officeIps = ['localhost', '127.0.0.1', '192.168.137.111', '::1'];
+        const officeIps = ['localhost', '127.0.0.1', '192.168.137.111', '192.168.137.57', '::1'];
         const isOffice = officeIps.includes(hostname);
         setIsHome(!isOffice);
     }, []);
