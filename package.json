@@ -9,7 +9,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "vite build && vite preview --host 0.0.0.0 --port 10000"
+    "start": "NODE_OPTIONS=--max-old-space-size=400 vite build && vite preview --host 0.0.0.0 --port 10000"
   },
   "dependencies": {
     "chart.js": "^4.5.1",
