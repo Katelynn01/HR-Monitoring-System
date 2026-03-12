@@ -32,9 +32,9 @@ export default function LeaveRequests() {
                     ...data,
                     employeeName: usersMap[data.userId]?.name || 'Unknown',
                     department: usersMap[data.userId]?.department || '—',
-                    startDateStr: data.startDate?.toDate?.()?.toLocaleDateString() || data.startDate,
-                    endDateStr: data.endDate?.toDate?.()?.toLocaleDateString() || data.endDate,
-                    createdStr: data.createdAt?.toDate?.()?.toLocaleDateString() || '—'
+                    startDateStr: data.startDate?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || data.startDate,
+                    endDateStr: data.endDate?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || data.endDate,
+                    createdStr: data.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || '—'
                 });
             });
             list.sort((a, b) => {
@@ -184,44 +184,75 @@ export default function LeaveRequests() {
                             {filtered.length === 0 ? (
                                 <tr><td colSpan={8}><div className="empty-state"><p>No leave requests</p></div></td></tr>
                             ) : (
-                                filtered.map(r => (
-                                    <tr key={r.id}>
-                                        <td style={{ fontWeight: 600 }}>{r.employeeName}</td>
-                                        <td>{r.department}</td>
-                                        <td><span className="badge badge-info">{r.type}</span></td>
-                                        <td>{r.startDateStr}</td>
-                                        <td>{r.endDateStr}</td>
-                                        <td
-                                            style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: r.reason ? 'pointer' : 'default', textDecoration: r.reason ? 'underline' : 'none', color: r.reason ? 'var(--primary-600)' : 'inherit' }}
-                                            onClick={() => r.reason && setSelectedReason(r.reason)}
-                                            title={r.reason ? "Click to read full reason" : ""}
-                                        >
-                                            {r.reason || '—'}
-                                        </td>
-                                        <td>
-                                            <span className={`badge ${r.status === 'approved' ? 'badge-success' : r.status === 'rejected' ? 'badge-danger' : 'badge-warning'}`}>
-                                                {r.status === 'pending' && <Clock size={12} />}
-                                                {r.status === 'approved' && <Check size={12} />}
-                                                {r.status === 'rejected' && <X size={12} />}
-                                                {r.status}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {r.status === 'pending' ? (
-                                                <div style={{ display: 'flex', gap: 6 }}>
-                                                    <button className="btn btn-primary btn-sm" onClick={() => handleAction(r.id, 'approved', r)}>
-                                                        <Check size={14} /> Approve
-                                                    </button>
-                                                    <button className="btn btn-danger btn-sm" onClick={() => handleAction(r.id, 'rejected', r)}>
-                                                        <X size={14} /> Reject
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <span style={{ color: 'var(--gray-400)', fontSize: 13 }}>Reviewed</span>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))
+                                (() => {
+                                    let lastDate = null;
+                                    const rows = [];
+                                    
+                                    // Sort by createdAt descending to ensure date separators work properly
+                                    const sortedFiltered = [...filtered].sort((a, b) => {
+                                        const timeA = a.createdAt?.toMillis?.() || 0;
+                                        const timeB = b.createdAt?.toMillis?.() || 0;
+                                        return timeB - timeA;
+                                    });
+
+                                    sortedFiltered.forEach(r => {
+                                        if (r.createdStr !== lastDate) {
+                                            rows.push(
+                                                <tr key={`date-${r.createdStr}`} style={{ backgroundColor: '#f9fafb' }}>
+                                                    <td colSpan={8} style={{ fontWeight: 600, color: '#374151', padding: '12px 16px', borderTop: '1px solid #e5e7eb' }}>
+                                                        {r.createdStr === new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) ? 'Today - ' + r.createdStr : r.createdStr}
+                                                    </td>
+                                                </tr>
+                                            );
+                                            lastDate = r.createdStr;
+                                        }
+
+                                        rows.push(
+                                            <tr 
+                                                key={r.id}
+                                                onClick={() => r.reason && setSelectedReason(r.reason)}
+                                                style={{ cursor: r.reason ? 'pointer' : 'default', transition: 'background-color 0.2s' }}
+                                                onMouseEnter={(e) => { if (r.reason) e.currentTarget.style.backgroundColor = '#f0fdf4'; }}
+                                                onMouseLeave={(e) => { if (r.reason) e.currentTarget.style.backgroundColor = 'transparent'; }}
+                                                title={r.reason ? "Click to view full reason" : ""}
+                                            >
+                                                <td style={{ fontWeight: 600, color: 'var(--gray-800)' }}>{r.employeeName}</td>
+                                                <td>{r.department}</td>
+                                                <td><span className="badge badge-info">{r.type}</span></td>
+                                                <td>{r.startDateStr}</td>
+                                                <td>{r.endDateStr}</td>
+                                                <td
+                                                    style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: r.reason ? 'var(--primary-600)' : 'inherit' }}
+                                                >
+                                                    {r.reason || '—'}
+                                                </td>
+                                                <td>
+                                                    <span className={`badge ${r.status === 'approved' ? 'badge-success' : r.status === 'rejected' ? 'badge-danger' : 'badge-warning'}`}>
+                                                        {r.status === 'pending' && <Clock size={12} />}
+                                                        {r.status === 'approved' && <Check size={12} />}
+                                                        {r.status === 'rejected' && <X size={12} />}
+                                                        {r.status}
+                                                    </span>
+                                                </td>
+                                                <td onClick={(e) => e.stopPropagation()}>
+                                                    {r.status === 'pending' ? (
+                                                        <div style={{ display: 'flex', gap: 6 }}>
+                                                            <button className="btn btn-primary btn-sm" onClick={(e) => { e.stopPropagation(); handleAction(r.id, 'approved', r); }}>
+                                                                <Check size={14} /> Approve
+                                                            </button>
+                                                            <button className="btn btn-danger btn-sm" onClick={(e) => { e.stopPropagation(); handleAction(r.id, 'rejected', r); }}>
+                                                                <X size={14} /> Reject
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <span style={{ color: 'var(--gray-400)', fontSize: 13 }}>Reviewed</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    });
+                                    return rows;
+                                })()
                             )}
                         </tbody>
                     </table>

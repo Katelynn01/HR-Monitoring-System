@@ -119,60 +119,65 @@ export default function Employees() {
                                 </td></tr>
                             ) : (
                                 filtered.map(emp => (
-                                    <tr key={emp.id}>
-                                        {editingId === emp.id ? (
-                                            <>
-                                                <td><input className="filter-input" value={editData.name} onChange={e => setEditData({ ...editData, name: e.target.value })} /></td>
-                                                <td>{emp.email}</td>
-                                                <td>
-                                                    <select
-                                                        className="filter-input"
-                                                        value={editData.department}
-                                                        onChange={e => setEditData({ ...editData, department: e.target.value })}
-                                                    >
-                                                        <option value="">Select Department</option>
-                                                        <option value="Agriculture">Agriculture</option>
-                                                        <option value="Operations">Operations</option>
-                                                        <option value="Accounting">Accounting</option>
-                                                        <option value="Human Resources">Human Resources</option>
-                                                        <option value="Business Solutions">Business Solutions</option>
-                                                        <option value="Marketing">Marketing</option>
-                                                    </select>
-                                                </td>
-                                                <td><input className="filter-input" type="number" style={{ width: 60 }} value={editData.vacation} onChange={e => setEditData({ ...editData, vacation: e.target.value })} /></td>
-                                                <td><input className="filter-input" type="number" style={{ width: 60 }} value={editData.sick} onChange={e => setEditData({ ...editData, sick: e.target.value })} /></td>
-                                                <td><input className="filter-input" type="number" style={{ width: 60 }} value={editData.personal} onChange={e => setEditData({ ...editData, personal: e.target.value })} /></td>
-                                                <td>
-                                                    <div style={{ display: 'flex', gap: 8 }}>
-                                                        <button className="btn btn-primary btn-sm" onClick={saveEdit}><Save size={14} /> Save</button>
-                                                        <button className="btn btn-secondary btn-sm" onClick={() => setEditingId(null)}><X size={14} /></button>
-                                                    </div>
-                                                </td>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <td
-                                                    style={{ fontWeight: 600, cursor: 'pointer', color: 'var(--green-600)', textDecoration: 'underline' }}
-                                                    onClick={() => setSelectedHistoryUser(emp)}
-                                                    title="Click to view history"
-                                                >
-                                                    {emp.name}
-                                                </td>
-                                                <td>{emp.email}</td>
-                                                <td><span className="badge badge-success">{emp.department || '—'}</span></td>
-                                                <td>{emp.leaveCredits?.vacation ?? 15}</td>
-                                                <td>{emp.leaveCredits?.sick ?? 10}</td>
-                                                <td>{emp.leaveCredits?.personal ?? 5}</td>
-                                                <td>
-                                                    <div style={{ display: 'flex', gap: 8 }}>
-                                                        <button className="btn btn-secondary btn-sm" onClick={() => startEdit(emp)}><Edit3 size={14} /> Edit</button>
-                                                        <button className="btn btn-danger btn-sm" onClick={() => setDeletingId(emp.id)}><Trash2 size={14} /> Delete</button>
-                                                    </div>
-                                                </td>
-                                            </>
-                                        )}
-                                    </tr>
-                                ))
+                                            <tr 
+                                                key={emp.id}
+                                                onClick={(e) => {
+                                                    if (editingId === emp.id) return;
+                                                    if (e.target.closest('button, input, select, a')) return;
+                                                    setSelectedHistoryUser(emp);
+                                                }}
+                                                style={{ cursor: editingId === emp.id ? 'default' : 'pointer', transition: 'background-color 0.2s' }}
+                                                onMouseEnter={(e) => { if (editingId !== emp.id) e.currentTarget.style.backgroundColor = '#f0fdf4'; }}
+                                                onMouseLeave={(e) => { if (editingId !== emp.id) e.currentTarget.style.backgroundColor = 'transparent'; }}
+                                                title={editingId === emp.id ? "" : "Click to view employee history"}
+                                            >
+                                                {editingId === emp.id ? (
+                                                    <>
+                                                        <td><input className="filter-input" value={editData.name} onChange={e => setEditData({ ...editData, name: e.target.value })} /></td>
+                                                        <td>{emp.email}</td>
+                                                        <td>
+                                                            <select
+                                                                className="filter-input"
+                                                                value={editData.department}
+                                                                onChange={e => setEditData({ ...editData, department: e.target.value })}
+                                                            >
+                                                                <option value="">Select Department</option>
+                                                                <option value="Agriculture">Agriculture</option>
+                                                                <option value="Operations">Operations</option>
+                                                                <option value="Accounting">Accounting</option>
+                                                                <option value="Human Resources">Human Resources</option>
+                                                                <option value="Business Solutions">Business Solutions</option>
+                                                                <option value="Marketing">Marketing</option>
+                                                            </select>
+                                                        </td>
+                                                        <td><input className="filter-input" type="number" style={{ width: 60 }} value={editData.vacation} onChange={e => setEditData({ ...editData, vacation: e.target.value })} /></td>
+                                                        <td><input className="filter-input" type="number" style={{ width: 60 }} value={editData.sick} onChange={e => setEditData({ ...editData, sick: e.target.value })} /></td>
+                                                        <td><input className="filter-input" type="number" style={{ width: 60 }} value={editData.personal} onChange={e => setEditData({ ...editData, personal: e.target.value })} /></td>
+                                                        <td>
+                                                            <div style={{ display: 'flex', gap: 8 }}>
+                                                                <button className="btn btn-primary btn-sm" onClick={saveEdit}><Save size={14} /> Save</button>
+                                                                <button className="btn btn-secondary btn-sm" onClick={() => setEditingId(null)}><X size={14} /></button>
+                                                            </div>
+                                                        </td>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <td style={{ fontWeight: 600, color: 'var(--gray-800)' }}>{emp.name}</td>
+                                                        <td>{emp.email}</td>
+                                                        <td><span className="badge badge-success">{emp.department || '—'}</span></td>
+                                                        <td>{emp.leaveCredits?.vacation ?? 15}</td>
+                                                        <td>{emp.leaveCredits?.sick ?? 10}</td>
+                                                        <td>{emp.leaveCredits?.personal ?? 5}</td>
+                                                        <td>
+                                                            <div style={{ display: 'flex', gap: 8 }}>
+                                                                <button className="btn btn-secondary btn-sm" onClick={() => startEdit(emp)}><Edit3 size={14} /> Edit</button>
+                                                                <button className="btn btn-danger btn-sm" onClick={() => setDeletingId(emp.id)}><Trash2 size={14} /> Delete</button>
+                                                            </div>
+                                                        </td>
+                                                    </>
+                                                )}
+                                            </tr>
+                                        ))
                             )}
                         </tbody>
                     </table>

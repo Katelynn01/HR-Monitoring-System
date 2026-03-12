@@ -34,7 +34,7 @@ export default function Attendance() {
                     name: usersMap[data.userId]?.name || 'Unknown',
                     department: usersMap[data.userId]?.department || '—',
                     date: data.date?.toDate?.() || null,
-                    dateStr: data.date?.toDate?.()?.toLocaleDateString() || '—',
+                    dateStr: data.date?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || '—',
                     timeIn: data.timeIn?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '—',
                     timeOut: data.timeOut?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || 'Active',
                     totalHours: data.totalHours != null ? data.totalHours.toFixed(1) : '—',
@@ -97,27 +97,45 @@ export default function Attendance() {
                             {filtered.length === 0 ? (
                                 <tr><td colSpan={7}><div className="empty-state"><p>No records found</p></div></td></tr>
                             ) : (
-                                filtered.map(r => (
-                                    <tr key={r.id}>
-                                        <td
-                                            style={{ fontWeight: 600, cursor: 'pointer', color: 'var(--green-600)', textDecoration: 'underline' }}
-                                            onClick={() => setSelectedHistoryUser({ id: r.userId, name: r.name, department: r.department })}
-                                            title="Click to view history"
-                                        >
-                                            {r.name}
-                                        </td>
-                                        <td>{r.department}</td>
-                                        <td>{r.dateStr}</td>
-                                        <td><span className="badge badge-success">{r.timeIn}</span></td>
-                                        <td><span className={`badge ${r.timeOut === 'Active' ? 'badge-warning' : 'badge-info'}`}>{r.timeOut}</span></td>
-                                        <td>{r.totalHours}h</td>
-                                        <td>
-                                            <span className="badge badge-neutral" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                <Lock size={12} /> Locked
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))
+                                (() => {
+                                    let lastDate = null;
+                                    const rows = [];
+                                    filtered.forEach(r => {
+                                        if (r.dateStr !== lastDate) {
+                                            rows.push(
+                                                <tr key={`date-${r.dateStr}`} style={{ backgroundColor: '#f9fafb' }}>
+                                                    <td colSpan={7} style={{ fontWeight: 600, color: '#374151', padding: '12px 16px', borderTop: '1px solid #e5e7eb' }}>
+                                                        {r.dateStr === new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) ? 'Today - ' + r.dateStr : r.dateStr}
+                                                    </td>
+                                                </tr>
+                                            );
+                                            lastDate = r.dateStr;
+                                        }
+                                        rows.push(
+                                            <tr 
+                                                key={r.id}
+                                                onClick={() => setSelectedHistoryUser({ id: r.userId, name: r.name, department: r.department })}
+                                                style={{ cursor: 'pointer', transition: 'background-color 0.2s' }}
+                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0fdf4'}
+                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                title="Click to view employee details"
+                                            >
+                                                <td style={{ fontWeight: 600, color: 'var(--gray-800)' }}>{r.name}</td>
+                                                <td>{r.department}</td>
+                                                <td style={{ color: 'var(--gray-500)' }}>{r.dateStr}</td>
+                                                <td><span className="badge badge-success">{r.timeIn}</span></td>
+                                                <td><span className={`badge ${r.timeOut === 'Active' ? 'badge-warning' : 'badge-info'}`}>{r.timeOut}</span></td>
+                                                <td>{r.totalHours}h</td>
+                                                <td>
+                                                    <span className="badge badge-neutral" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                        <Lock size={12} /> Locked
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        );
+                                    });
+                                    return rows;
+                                })()
                             )}
                         </tbody>
                     </table>

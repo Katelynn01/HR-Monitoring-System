@@ -73,6 +73,7 @@ export function AuthProvider({ children }) {
                 department,
                 role: 'employee',
                 leaveCredits: { vacation: 15, sick: 10, personal: 5 },
+                needsDepartment: true,
                 createdAt: serverTimestamp()
             };
             await setDoc(profileRef, profile);

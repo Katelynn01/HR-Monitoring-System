@@ -13,6 +13,10 @@ export default function ProtectedRoute({ children, requiredRole }) {
         return <Navigate to="/login" />;
     }
 
+    if (userProfile?.needsDepartment) {
+        return <Navigate to="/login" replace />;
+    }
+
     if (requiredRole) {
         const currentRole = userProfile?.role || 'employee'; // default to employee if db doc missing
         if (currentRole !== requiredRole) {

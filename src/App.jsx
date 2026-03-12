@@ -33,8 +33,8 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/login" element={user ? <Navigate to={userProfile?.role === 'admin' ? '/admin' : '/employee'} /> : <Login />} />
-      <Route path="/register" element={user ? <Navigate to="/employee" /> : <Register />} />
+      <Route path="/login" element={(user && userProfile && !userProfile.needsDepartment) ? <Navigate to={userProfile.role === 'admin' ? '/admin' : '/employee'} /> : <Login />} />
+      <Route path="/register" element={(user && userProfile && !userProfile.needsDepartment) ? <Navigate to="/employee" /> : <Register />} />
 
       {/* Admin routes */}
       <Route path="/admin" element={

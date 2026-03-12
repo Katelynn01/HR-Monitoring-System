@@ -27,12 +27,10 @@ export default function Register() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     
-    // Department modal for new Google users
-    const [showDeptModal, setShowDeptModal] = useState(false);
+    // Department selection for new Google users
     const [selectedDept, setSelectedDept] = useState('');
-    const [pendingGoogleResult, setPendingGoogleResult] = useState(null);
 
-    const { register, loginWithGoogle } = useAuth();
+    const { register, loginWithGoogle, user, userProfile } = useAuth();
     const navigate = useNavigate();
 
     async function handleSubmit(e) {
@@ -60,15 +58,7 @@ export default function Register() {
         setError('');
         setLoading(true);
         try {
-            const result = await loginWithGoogle();
-            if (result.isNewUser) {
-                // Need department — show modal
-                setPendingGoogleResult(result);
-                setShowDeptModal(true);
-                setLoading(false);
-                return;
-            }
-            navigate(result.role === 'admin' ? '/admin' : '/employee');
+            await loginWithGoogle();
         } catch (err) {
             if (err.code !== 'auth/popup-closed-by-user') {
                 setError('Google sign-in failed. Please try again.');
@@ -78,16 +68,16 @@ export default function Register() {
     }
 
     async function handleDeptSubmit() {
-        if (!selectedDept) return;
+        if (!selectedDept || !user) return;
         setLoading(true);
         try {
-            // Update the already-created profile with the chosen department
-            const { doc, updateDoc } = await import('firebase/firestore');
+            const { doc, updateDoc, deleteField } = await import('firebase/firestore');
             const { db } = await import('../firebase');
-            const { auth } = await import('../firebase');
-            await updateDoc(doc(db, 'users', auth.currentUser.uid), { department: selectedDept });
-            setShowDeptModal(false);
-            navigate('/employee');
+            await updateDoc(doc(db, 'users', user.uid), { 
+                department: selectedDept,
+                needsDepartment: deleteField() 
+            });
+            // App.jsx will automatically redirect once needsDepartment is gone
         } catch (err) {
             setError('Failed to save department. Please try again.');
         }
@@ -219,7 +209,7 @@ export default function Register() {
             </div>
 
             {/* Department picker modal for new Google users */}
-            {showDeptModal && (
+            {(user && userProfile?.needsDepartment) && (
                 <div style={{
                     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
@@ -250,8 +240,6 @@ export default function Register() {
                                 onClick={async () => {
                                     const { auth } = await import('../firebase');
                                     await auth.signOut();
-                                    setShowDeptModal(false);
-                                    setPendingGoogleResult(null);
                                 }}
                                 disabled={loading}
                             >
