@@ -5,9 +5,11 @@ import {
     createUserWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    GoogleAuthProvider,
+    signInWithPopup
 } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp, onSnapshot, addDoc, collection } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, onSnapshot, addDoc, collection } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
@@ -52,6 +54,41 @@ export function AuthProvider({ children }) {
 
         setUserProfile(profile);
         return result;
+    }
+
+    async function loginWithGoogle(department = '') {
+        const provider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, provider);
+        const uid = result.user.uid;
+
+        // Check if user already has a Firestore profile
+        const profileRef = doc(db, 'users', uid);
+        const profileSnap = await getDoc(profileRef);
+
+        if (!profileSnap.exists()) {
+            // New Google user — create profile
+            const profile = {
+                name: result.user.displayName || '',
+                email: result.user.email || '',
+                department,
+                role: 'employee',
+                leaveCredits: { vacation: 15, sick: 10, personal: 5 },
+                createdAt: serverTimestamp()
+            };
+            await setDoc(profileRef, profile);
+            // Notify admins
+            await addDoc(collection(db, 'notifications'), {
+                forAdmin: true,
+                title: 'New Employee Registered',
+                message: `${profile.name} (${department}) has signed up via Google.`,
+                link: '/admin/employees',
+                read: false,
+                createdAt: serverTimestamp()
+            });
+            return { isNewUser: true, role: 'employee' };
+        }
+
+        return { isNewUser: false, role: profileSnap.data().role };
     }
 
     async function logout() {
@@ -106,6 +143,7 @@ export function AuthProvider({ children }) {
         userProfile,
         loading,
         login,
+        loginWithGoogle,
         register,
         logout,
         resetPassword,
