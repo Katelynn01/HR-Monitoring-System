@@ -124,7 +124,21 @@ export default function Employees() {
                                             <>
                                                 <td><input className="filter-input" value={editData.name} onChange={e => setEditData({ ...editData, name: e.target.value })} /></td>
                                                 <td>{emp.email}</td>
-                                                <td><input className="filter-input" value={editData.department} onChange={e => setEditData({ ...editData, department: e.target.value })} /></td>
+                                                <td>
+                                                    <select
+                                                        className="filter-input"
+                                                        value={editData.department}
+                                                        onChange={e => setEditData({ ...editData, department: e.target.value })}
+                                                    >
+                                                        <option value="">Select Department</option>
+                                                        <option value="Agriculture">Agriculture</option>
+                                                        <option value="Operations">Operations</option>
+                                                        <option value="Accounting">Accounting</option>
+                                                        <option value="Human Resources">Human Resources</option>
+                                                        <option value="Business Solutions">Business Solutions</option>
+                                                        <option value="Marketing">Marketing</option>
+                                                    </select>
+                                                </td>
                                                 <td><input className="filter-input" type="number" style={{ width: 60 }} value={editData.vacation} onChange={e => setEditData({ ...editData, vacation: e.target.value })} /></td>
                                                 <td><input className="filter-input" type="number" style={{ width: 60 }} value={editData.sick} onChange={e => setEditData({ ...editData, sick: e.target.value })} /></td>
                                                 <td><input className="filter-input" type="number" style={{ width: 60 }} value={editData.personal} onChange={e => setEditData({ ...editData, personal: e.target.value })} /></td>

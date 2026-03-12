@@ -7,7 +7,7 @@ import {
     onAuthStateChanged,
     sendPasswordResetEmail
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp, onSnapshot, addDoc, collection } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, onSnapshot, addDoc, collection } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
@@ -22,10 +22,7 @@ export function AuthProvider({ children }) {
 
     async function login(email, password) {
         const result = await signInWithEmailAndPassword(auth, email, password);
-        const profileDoc = await getDoc(doc(db, 'users', result.user.uid));
-        if (profileDoc.exists()) {
-            setUserProfile(profileDoc.data());
-        }
+        // userProfile is set by the onSnapshot listener in onAuthStateChanged
         return result;
     }
 
