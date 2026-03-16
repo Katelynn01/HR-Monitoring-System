@@ -23,7 +23,7 @@ export default function Layout() {
                     </button>
                     <div className="header-left">
                         <h2 className="page-greeting">
-                            Welcome back, <span className="greeting-name">{userProfile?.name || 'User'}</span>
+                            Welcome back, <span className="greeting-name">{userProfile?.name?.split(' ')[0] || 'User'}</span>
                         </h2>
                     </div>
                     <div className="header-right">
