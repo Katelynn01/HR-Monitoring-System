@@ -53,7 +53,7 @@ export default function Attendance() {
     const filtered = records.filter(r => {
         const matchSearch = r.name.toLowerCase().includes(search.toLowerCase()) ||
             r.department.toLowerCase().includes(search.toLowerCase());
-        const matchDate = !dateFilter || r.dateStr === new Date(dateFilter).toLocaleDateString();
+        const matchDate = !dateFilter || r.dateStr === new Date(dateFilter + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         return matchSearch && matchDate;
     });
 

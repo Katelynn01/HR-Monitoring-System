@@ -80,7 +80,9 @@ export default function LeaveBalance() {
         setFormError('');
 
         // Validate against available balance
-        const requestedDays = countWeekdays(form.startDate, form.endDate);
+        const localStartDate = form.startDate + 'T00:00:00';
+        const localEndDate = form.endDate + 'T00:00:00';
+        const requestedDays = countWeekdays(localStartDate, localEndDate);
         const available = credits[form.type.toLowerCase()] ?? 0;
 
         // If home, only sick leave is allowed
@@ -103,8 +105,8 @@ export default function LeaveBalance() {
             await addDoc(collection(db, 'leaveRequests'), {
                 userId: user.uid,
                 type: form.type,
-                startDate: Timestamp.fromDate(new Date(form.startDate)),
-                endDate: Timestamp.fromDate(new Date(form.endDate)),
+                startDate: Timestamp.fromDate(new Date(localStartDate)),
+                endDate: Timestamp.fromDate(new Date(localEndDate)),
                 reason: form.reason,
                 status: 'pending',
                 createdAt: serverTimestamp()

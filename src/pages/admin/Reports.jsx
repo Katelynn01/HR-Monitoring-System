@@ -57,9 +57,9 @@ export default function Reports() {
     async function generateReport() {
         setLoading(true);
         try {
-            const from = new Date(dateFrom);
+            const from = new Date(dateFrom + 'T00:00:00');
             from.setHours(0, 0, 0, 0);
-            const to = new Date(dateTo);
+            const to = new Date(dateTo + 'T00:00:00');
             to.setHours(23, 59, 59, 999);
 
             const usersSnap = await getDocs(query(collection(db, 'users'), where('role', '==', 'employee')));
