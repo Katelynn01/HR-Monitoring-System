@@ -66,20 +66,21 @@ export default function Employees() {
     async function confirmDelete() {
         if (!deletingId) return;
         try {
-            // Determine backend URL (fallback to localhost for local dev)
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
-
-            // 1. Delete user from Firebase Auth via backend API
-            const response = await fetch(`${backendUrl}/delete-user`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ uid: deletingId })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                console.error('Failed to delete user from Auth:', errorData);
-                // We proceed to delete from Firestore anyway to ensure the UI is clean
+            // 1. Attempt to delete user from Firebase Auth via backend API (best-effort)
+            try {
+                const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+                const response = await fetch(`${backendUrl}/delete-user`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ uid: deletingId })
+                });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.warn('Backend could not delete user from Auth:', errorData);
+                }
+            } catch (backendErr) {
+                // Backend unavailable (e.g. local dev without server) — continue with Firestore cleanup
+                console.warn('Backend unreachable, skipping Auth deletion:', backendErr.message);
             }
 
             // 2. Delete all related history records in batches

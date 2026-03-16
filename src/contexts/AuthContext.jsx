@@ -126,11 +126,15 @@ export function AuthProvider({ children }) {
             if (currentUser) {
                 try {
                     // Set up real-time listener for user profile
-                    unsubscribeProfile = onSnapshot(doc(db, 'users', currentUser.uid), (doc) => {
-                        if (doc.exists()) {
-                            setUserProfile(doc.data());
+                    unsubscribeProfile = onSnapshot(doc(db, 'users', currentUser.uid), (snapshot) => {
+                        if (snapshot.exists()) {
+                            setUserProfile(snapshot.data());
+                            setLoading(false);
+                        } else {
+                            // User's Firestore document was deleted (e.g. removed by admin)
+                            // Force sign out immediately
+                            signOut(auth);
                         }
-                        setLoading(false);
                     }, (err) => {
                         console.error('Profile listener error:', err);
                         setLoading(false);

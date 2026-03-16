@@ -27,11 +27,13 @@ export default function LeaveRequests() {
             const list = [];
             snap.forEach(d => {
                 const data = d.data();
+                const emp = usersMap[data.userId];
+                if (!emp) return; // skip deleted accounts
                 list.push({
                     id: d.id,
                     ...data,
-                    employeeName: usersMap[data.userId]?.name || 'Unknown',
-                    department: usersMap[data.userId]?.department || '—',
+                    employeeName: emp.name,
+                    department: emp.department || '—',
                     startDateStr: data.startDate?.toDate?.()?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || data.startDate,
                     endDateStr: data.endDate?.toDate?.()?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || data.endDate,
                     createdStr: data.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || '—'

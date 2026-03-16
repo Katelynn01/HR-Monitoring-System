@@ -79,10 +79,11 @@ export default function Reports() {
             attSnap.forEach(d => {
                 const data = d.data();
                 const emp = usersMap[data.userId];
+                if (!emp) return; // skip if user was deleted
                 records.push({
                     id: d.id,
-                    name: emp?.name || 'Unknown',
-                    department: emp?.department || '—',
+                    name: emp.name,
+                    department: emp.department || '—',
                     date: data.date?.toDate?.()?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || '—',
                     timeIn: data.timeIn?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '—',
                     timeOut: data.timeOut?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '—',
