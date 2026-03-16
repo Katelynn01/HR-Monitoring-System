@@ -4,6 +4,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { User, Mail, Building2, Phone, MapPin, HeartPulse, Save, Shield } from 'lucide-react';
 import ErrorModal from '../../components/ErrorModal';
+import ProfilePicture from '../../components/ProfilePicture';
 
 export default function Profile() {
     const { user, userProfile } = useAuth();
@@ -142,6 +143,11 @@ export default function Profile() {
                         <h2 className="card-title" style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600' }}>Account Details</h2>
                     </div>
                     <div className="card-body" style={{ padding: '1.5rem', background: 'var(--bg-primary)', borderBottomLeftRadius: '0.5rem', borderBottomRightRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '3.5rem', marginTop: '1.5rem' }}>
+                            <div style={{ transform: 'scale(3.2)', transformOrigin: 'center' }}>
+                                <ProfilePicture userProfile={userProfile} />
+                            </div>
+                        </div>
                         <div className="info-group">
                             <label className="info-label">
                                 <Mail size={16} /> Email Address

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase';
 import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
-import { BarChart3, Download, Filter, ChevronDown, ChevronRight, Sunrise } from 'lucide-react';
+import { BarChart3, Download, Filter, ChevronDown, ChevronRight, Sunrise, FileText } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -26,6 +28,7 @@ export default function Reports() {
     const [expandedEmployee, setExpandedEmployee] = useState(null);
     const [earlyBirdsData, setEarlyBirdsData] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [initialLoad, setInitialLoad] = useState(true);
 
     useEffect(() => {
         const today = new Date();
@@ -43,6 +46,13 @@ export default function Reports() {
             setDateTo(today.toISOString().split('T')[0]);
         }
     }, [reportType]);
+
+    useEffect(() => {
+        if (dateFrom && dateTo && initialLoad) {
+            generateReport();
+            setInitialLoad(false);
+        }
+    }, [dateFrom, dateTo, initialLoad]);
 
     async function generateReport() {
         setLoading(true);
@@ -73,7 +83,7 @@ export default function Reports() {
                     id: d.id,
                     name: emp?.name || 'Unknown',
                     department: emp?.department || '—',
-                    date: data.date?.toDate?.()?.toLocaleDateString() || '—',
+                    date: data.date?.toDate?.()?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || '—',
                     timeIn: data.timeIn?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '—',
                     timeOut: data.timeOut?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '—',
                     totalHours: data.totalHours?.toFixed(1) || '0'
@@ -153,6 +163,94 @@ export default function Reports() {
         URL.revokeObjectURL(url);
     }
 
+    function exportPDF() {
+        if (reportData.length === 0) return;
+        const doc = new jsPDF();
+
+        // ── Section 1: Attendance Report ──
+        doc.setFontSize(18);
+        doc.setTextColor(22, 101, 52);
+        doc.text('Attendance Report', 14, 20);
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`Period: ${dateFrom}  to  ${dateTo}`, 14, 28);
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 34);
+
+        const attendanceData = reportData.map(r => [r.name, r.department, r.date, r.timeIn, r.timeOut, `${r.totalHours}h`]);
+        autoTable(doc, {
+            startY: 42,
+            head: [['Name', 'Department', 'Date', 'Time In', 'Time Out', 'Total Hours']],
+            body: attendanceData,
+            theme: 'grid',
+            headStyles: { fillColor: [22, 163, 74], textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [240, 253, 244] },
+            styles: { fontSize: 9 }
+        });
+
+        // ── Section 2: Early Birds Summary ──
+        if (earlyBirdsData.length > 0) {
+            const afterAttendanceY = doc.lastAutoTable.finalY + 14;
+            doc.setFontSize(14);
+            doc.setTextColor(22, 101, 52);
+            doc.text('🌅  Early Birds Summary', 14, afterAttendanceY);
+            doc.setFontSize(9);
+            doc.setTextColor(120);
+            doc.text('Official start time: 8:30 AM', 14, afterAttendanceY + 6);
+
+            const earlyData = earlyBirdsData.map((r, i) => [
+                `#${i + 1}`,
+                r.name,
+                r.department,
+                `${r.earlyDays} day${r.earlyDays !== 1 ? 's' : ''}`,
+                r.avgMinsEarly >= 60 ? `${Math.floor(r.avgMinsEarly / 60)}h ${r.avgMinsEarly % 60}m` : `${r.avgMinsEarly}m`,
+                r.earliestTimeStr,
+                r.earlyDays >= 5 ? 'Consistent' : r.earlyDays >= 3 ? 'Regular' : 'Occasional'
+            ]);
+            autoTable(doc, {
+                startY: afterAttendanceY + 10,
+                head: [['#', 'Name', 'Department', 'Early Days', 'Avg Early', 'Earliest', 'Status']],
+                body: earlyData,
+                theme: 'grid',
+                headStyles: { fillColor: [234, 179, 8], textColor: 255, fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: [254, 252, 232] },
+                styles: { fontSize: 9 }
+            });
+        }
+
+        doc.save(`attendance_report_${dateFrom}_${dateTo}.pdf`);
+    }
+
+    function exportEarlyBirdsPDF() {
+        if (earlyBirdsData.length === 0) return;
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.setTextColor(22, 101, 52);
+        doc.text('Early Birds Summary', 14, 20);
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`Period: ${dateFrom}  to  ${dateTo}`, 14, 28);
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 34);
+        const tableData = earlyBirdsData.map((r, i) => [
+            `#${i + 1}`,
+            r.name,
+            r.department,
+            `${r.earlyDays} day${r.earlyDays !== 1 ? 's' : ''}`,
+            r.avgMinsEarly >= 60 ? `${Math.floor(r.avgMinsEarly / 60)}h ${r.avgMinsEarly % 60}m` : `${r.avgMinsEarly}m`,
+            r.earliestTimeStr,
+            r.earlyDays >= 5 ? 'Consistent Early Bird' : r.earlyDays >= 3 ? 'Regular Early Bird' : 'Occasional'
+        ]);
+        autoTable(doc, {
+            startY: 42,
+            head: [['#', 'Name', 'Department', 'Early Days', 'Avg Early', 'Earliest Time', 'Status']],
+            body: tableData,
+            theme: 'grid',
+            headStyles: { fillColor: [22, 163, 74], textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [240, 253, 244] },
+            styles: { fontSize: 9 }
+        });
+        doc.save(`early_birds_report_${dateFrom}_${dateTo}.pdf`);
+    }
+
     const deptChartData = {
         labels: Object.keys(departmentData),
         datasets: [{
@@ -202,12 +300,17 @@ export default function Reports() {
                             <input type="date" className="filter-input" value={dateTo} onChange={e => setDateTo(e.target.value)} />
                         </div>
                         <button className="btn btn-primary btn-sm" onClick={generateReport} disabled={loading}>
-                            {loading ? 'Generating...' : 'Generate Report'}
+                            {loading ? 'Generating...' : 'Generate Analytics'}
                         </button>
                         {reportData.length > 0 && (
-                            <button className="btn btn-accent btn-sm" onClick={exportCSV}>
-                                <Download size={14} /> Export CSV
-                            </button>
+                            <>
+                                <button className="btn btn-accent btn-sm" onClick={exportCSV}>
+                                    <Download size={14} /> Export CSV
+                                </button>
+                                <button className="btn btn-secondary btn-sm" onClick={exportPDF} style={{ borderColor: '#dc2626', color: '#dc2626' }}>
+                                    <FileText size={14} /> Export PDF
+                                </button>
+                            </>
                         )}
                     </div>
                 </div>
@@ -301,9 +404,14 @@ export default function Reports() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>Official start: 8:30 AM</span>
                                 {earlyBirdsData.length > 0 && (
-                                    <button className="btn btn-accent btn-sm" onClick={exportEarlyBirdsCSV}>
-                                        <Download size={14} /> Export CSV
-                                    </button>
+                                    <>
+                                        <button className="btn btn-accent btn-sm" onClick={exportEarlyBirdsCSV}>
+                                            <Download size={14} /> Export CSV
+                                        </button>
+                                        <button className="btn btn-secondary btn-sm" onClick={exportEarlyBirdsPDF} style={{ borderColor: '#dc2626', color: '#dc2626' }}>
+                                            <FileText size={14} /> Export PDF
+                                        </button>
+                                    </>
                                 )}
                             </div>
                         </div>
@@ -357,7 +465,7 @@ export default function Reports() {
                 <div className="content-card">
                     <div className="empty-state">
                         <BarChart3 size={48} />
-                        <p>Select a date range and click "Generate Report" to view analytics</p>
+                        <p>Select a date range and click "Generate Analytics" to view analytics</p>
                     </div>
                 </div>
             )}

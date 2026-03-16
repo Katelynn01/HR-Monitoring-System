@@ -4,6 +4,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
 import { Sprout, Clock, CalendarCheck, TreePine } from 'lucide-react';
 import LoadingScreen from '../../components/LoadingScreen';
+import AnnouncementsHolidays from '../../components/AnnouncementsHolidays';
+import AnnouncementPopup from '../../components/AnnouncementPopup';
 
 export default function EmployeeDashboard() {
     const { user, userProfile } = useAuth();
@@ -27,7 +29,7 @@ export default function EmployeeDashboard() {
                 totalHours += data.totalHours || 0;
                 records.push({
                     id: d.id,
-                    date: data.date?.toDate?.()?.toLocaleDateString() || '—',
+                    date: data.date?.toDate?.()?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || '—',
                     timeIn: data.timeIn?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '—',
                     timeOut: data.timeOut?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || 'Active',
                     totalHours: data.totalHours?.toFixed(1) || '—',
@@ -62,6 +64,7 @@ export default function EmployeeDashboard() {
 
     return (
         <div>
+            <AnnouncementPopup />
             <div className="section-header">
                 <div>
                     <h1 className="page-title"><Sprout size={28} /> My Dashboard</h1>
@@ -114,7 +117,9 @@ export default function EmployeeDashboard() {
                 </div>
             </div>
 
-            <div className="content-card">
+            <AnnouncementsHolidays />
+
+            <div className="content-card" style={{ marginTop: 24 }}>
                 <div className="card-header">
                     <h3><Clock size={18} /> Recent Attendance</h3>
                 </div>

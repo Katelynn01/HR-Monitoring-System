@@ -45,11 +45,14 @@ export default function Register() {
             await register(email, password, name, department);
             navigate(email.toLowerCase().includes('admin') ? '/admin' : '/employee');
         } catch (err) {
-            setError(
-                err.code === 'auth/email-already-in-use'
-                    ? 'An account with this email already exists'
-                    : 'Registration failed. Please try again.'
-            );
+            console.error('Registration error:', err);
+            const messages = {
+                'auth/email-already-in-use': 'An account with this email already exists.',
+                'auth/weak-password': 'Password must be at least 6 characters.',
+                'auth/invalid-email': 'Please enter a valid email address.',
+                'auth/network-request-failed': 'Network error. Check your connection and try again.',
+            };
+            setError(messages[err.code] || err.message || 'Registration failed. Please try again.');
         }
         setLoading(false);
     }

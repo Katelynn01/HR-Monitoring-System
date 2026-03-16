@@ -32,9 +32,9 @@ export default function LeaveRequests() {
                     ...data,
                     employeeName: usersMap[data.userId]?.name || 'Unknown',
                     department: usersMap[data.userId]?.department || '—',
-                    startDateStr: data.startDate?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || data.startDate,
-                    endDateStr: data.endDate?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || data.endDate,
-                    createdStr: data.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || '—'
+                    startDateStr: data.startDate?.toDate?.()?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || data.startDate,
+                    endDateStr: data.endDate?.toDate?.()?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || data.endDate,
+                    createdStr: data.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || '—'
                 });
             });
             list.sort((a, b) => {
@@ -200,7 +200,7 @@ export default function LeaveRequests() {
                                             rows.push(
                                                 <tr key={`date-${r.createdStr}`} style={{ backgroundColor: '#f9fafb' }}>
                                                     <td colSpan={8} style={{ fontWeight: 600, color: '#374151', padding: '12px 16px', borderTop: '1px solid #e5e7eb' }}>
-                                                        {r.createdStr === new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) ? 'Today - ' + r.createdStr : r.createdStr}
+                                                        {r.createdStr === new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) ? 'Today - ' + r.createdStr : r.createdStr}
                                                     </td>
                                                 </tr>
                                             );

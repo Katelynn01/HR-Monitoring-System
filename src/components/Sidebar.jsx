@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import Logo from './Logo';
+import ProfilePicture from './ProfilePicture';
 
 const adminMenuItems = [
     { path: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
@@ -75,9 +76,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                 <div className="sidebar-bottom">
                     {!collapsed && userProfile && (
                         <div className="user-info">
-                            <div className="user-avatar">
-                                {userProfile.name?.charAt(0).toUpperCase()}
-                            </div>
+                            <ProfilePicture userProfile={userProfile} />
                             <div className="user-details">
                                 <span className="user-name">{userProfile.name}</span>
                                 <span className="user-role">{isAdmin ? 'HR Staff' : 'Employee'}</span>

@@ -27,7 +27,7 @@ export default function MyAttendance() {
                 list.push({
                     id: d.id,
                     dateObj,
-                    date: dateObj.toLocaleDateString(),
+                    date: dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
                     month: `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`,
                     day: dateObj.toLocaleDateString('en-US', { weekday: 'short' }),
                     timeIn: data.timeIn?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '—',

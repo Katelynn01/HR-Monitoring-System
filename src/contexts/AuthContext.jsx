@@ -9,7 +9,7 @@ import {
     GoogleAuthProvider,
     signInWithPopup
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp, onSnapshot, addDoc, collection } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, onSnapshot, addDoc, collection, getDocs, query, where } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
@@ -61,11 +61,23 @@ export function AuthProvider({ children }) {
         const result = await signInWithPopup(auth, provider);
         const uid = result.user.uid;
 
-        // Check if user already has a Firestore profile
+        // Check if user already has a Firestore profile by UID
         const profileRef = doc(db, 'users', uid);
         const profileSnap = await getDoc(profileRef);
 
         if (!profileSnap.exists()) {
+            // Check if the email is already used by another account in our database
+            const usersRef = collection(db, 'users');
+            const emailQuery = query(usersRef, where('email', '==', result.user.email));
+            const emailQuerySnapshot = await getDocs(emailQuery);
+
+            if (!emailQuerySnapshot.empty) {
+                // Email is already used by another account (e.g., registered via email/password)
+                // We should delete the newly created Google Auth user to prevent orphaned auth records
+                await result.user.delete();
+                throw new Error('An account with this email address already exists. Please log in using your original method.');
+            }
+
             // New Google user — create profile
             const profile = {
                 name: result.user.displayName || '',

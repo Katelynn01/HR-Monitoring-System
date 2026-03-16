@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase';
-import { collection, getDocs, doc, updateDoc, query, where, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, query, where, deleteDoc, writeBatch } from 'firebase/firestore';
 import { Users, Search, Edit3, X, Save, Leaf, Trash2 } from 'lucide-react';
 import EmployeeHistoryModal from '../../components/EmployeeHistoryModal';
 import LoadingScreen from '../../components/LoadingScreen';
@@ -21,6 +21,12 @@ export default function Employees() {
             const snap = await getDocs(query(collection(db, 'users'), where('role', '==', 'employee')));
             const list = [];
             snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+            // Newest registrants first
+            list.sort((a, b) => {
+                const ta = a.createdAt?.toDate?.() || new Date(0);
+                const tb = b.createdAt?.toDate?.() || new Date(0);
+                return tb - ta;
+            });
             setEmployees(list);
         } catch (err) {
             console.error('Error fetching employees:', err);
@@ -60,7 +66,36 @@ export default function Employees() {
     async function confirmDelete() {
         if (!deletingId) return;
         try {
+            // Determine backend URL (fallback to localhost for local dev)
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+
+            // 1. Delete user from Firebase Auth via backend API
+            const response = await fetch(`${backendUrl}/delete-user`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ uid: deletingId })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Failed to delete user from Auth:', errorData);
+                // We proceed to delete from Firestore anyway to ensure the UI is clean
+            }
+
+            // 2. Delete all related history records in batches
+            const collections = ['attendance', 'leaveRequests', 'auditLogs'];
+            for (const col of collections) {
+                const snap = await getDocs(query(collection(db, col), where('userId', '==', deletingId)));
+                if (!snap.empty) {
+                    const batch = writeBatch(db);
+                    snap.forEach(d => batch.delete(d.ref));
+                    await batch.commit();
+                }
+            }
+
+            // 3. Delete user document from Firestore
             await deleteDoc(doc(db, 'users', deletingId));
+
             setDeletingId(null);
             fetchEmployees();
         } catch (err) {

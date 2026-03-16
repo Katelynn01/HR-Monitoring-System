@@ -4,6 +4,7 @@ import { db } from '../../firebase';
 import { collection, query, getDocs, where, Timestamp } from 'firebase/firestore';
 import { Users, UserCheck, Clock, CalendarOff, TrendingUp, Sprout, Sunrise } from 'lucide-react';
 import LoadingScreen from '../../components/LoadingScreen';
+import AnnouncementsHolidays from '../../components/AnnouncementsHolidays';
 import { Bar } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -114,10 +115,11 @@ export default function AdminDashboard() {
             const recent = [];
             recentSnap.forEach(d => {
                 const data = d.data();
+                if (!usersMap[data.userId]) return; // skip deleted accounts
                 recent.push({
                     id: d.id,
                     name: usersMap[data.userId] || 'Unknown',
-                    date: data.date?.toDate?.()?.toLocaleDateString() || '—',
+                    date: data.date?.toDate?.()?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || '—',
                     timeIn: data.timeIn?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '—',
                     timeOut: data.timeOut?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '—',
                     totalHours: data.totalHours?.toFixed(1) || '—'
@@ -138,6 +140,7 @@ export default function AdminDashboard() {
             recentSnap.forEach(d => {
                 const data = d.data();
                 if (!data.timeIn) return;
+                if (!usersMap[data.userId]) return; // skip deleted accounts
                 const timeIn = data.timeIn.toDate?.() || new Date(data.timeIn);
                 const h = timeIn.getHours();
                 const m = timeIn.getMinutes();
@@ -292,6 +295,9 @@ export default function AdminDashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* Announcements & Holidays */}
+            <AnnouncementsHolidays isAdmin />
 
             {/* Early Arrivals */}
             <div className="content-card" style={{ marginTop: 24 }}>

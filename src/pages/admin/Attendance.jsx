@@ -28,13 +28,14 @@ export default function Attendance() {
             const list = [];
             attSnap.forEach(d => {
                 const data = d.data();
+                if (!usersMap[data.userId]) return; // skip deleted accounts
                 list.push({
                     id: d.id,
                     userId: data.userId,
                     name: usersMap[data.userId]?.name || 'Unknown',
                     department: usersMap[data.userId]?.department || '—',
                     date: data.date?.toDate?.() || null,
-                    dateStr: data.date?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || '—',
+                    dateStr: data.date?.toDate?.()?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || '—',
                     timeIn: data.timeIn?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '—',
                     timeOut: data.timeOut?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || 'Active',
                     totalHours: data.totalHours != null ? data.totalHours.toFixed(1) : '—',
@@ -105,7 +106,7 @@ export default function Attendance() {
                                             rows.push(
                                                 <tr key={`date-${r.dateStr}`} style={{ backgroundColor: '#f9fafb' }}>
                                                     <td colSpan={7} style={{ fontWeight: 600, color: '#374151', padding: '12px 16px', borderTop: '1px solid #e5e7eb' }}>
-                                                        {r.dateStr === new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) ? 'Today - ' + r.dateStr : r.dateStr}
+                                                        {r.dateStr === new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) ? 'Today - ' + r.dateStr : r.dateStr}
                                                     </td>
                                                 </tr>
                                             );

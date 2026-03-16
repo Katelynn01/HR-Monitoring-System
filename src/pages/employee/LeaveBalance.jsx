@@ -58,9 +58,9 @@ export default function LeaveBalance() {
                 list.push({
                     id: d.id,
                     ...data,
-                    startDateStr: data.startDate?.toDate?.()?.toLocaleDateString() || data.startDate,
-                    endDateStr: data.endDate?.toDate?.()?.toLocaleDateString() || data.endDate,
-                    createdStr: data.createdAt?.toDate?.()?.toLocaleDateString() || '—'
+                    startDateStr: data.startDate?.toDate?.()?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || data.startDate,
+                    endDateStr: data.endDate?.toDate?.()?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || data.endDate,
+                    createdStr: data.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || '—'
                 });
             });
             list.sort((a, b) => {

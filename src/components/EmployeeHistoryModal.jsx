@@ -4,8 +4,7 @@ import { db } from '../firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 
 export default function EmployeeHistoryModal({ isOpen, onClose, employee }) {
-    const [earlyBirds, setEarlyBirds] = useState([]);
-    const [overtimes, setOvertimes] = useState([]);
+    const [attendance, setAttendance] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -21,55 +20,28 @@ export default function EmployeeHistoryModal({ isOpen, onClose, employee }) {
             const attQ = query(collection(db, 'attendance'), where('userId', '==', employee.id));
             const attSnap = await getDocs(attQ);
 
-            const WORK_HOUR = 8, WORK_MINUTE = 30;
-            const OUT_HOUR = 17, OUT_MINUTE = 30;
-            const earlyList = [];
-            const overtimeList = [];
+            const list = [];
 
             attSnap.forEach(d => {
                 const data = d.data();
-                if (data.timeIn) {
-                    const timeInDate = data.timeIn?.toDate?.() || new Date(data.timeIn);
-                    const h = timeInDate.getHours();
-                    const m = timeInDate.getMinutes();
-                    const isEarly = h < WORK_HOUR || (h === WORK_HOUR && m < WORK_MINUTE);
-
-                    if (isEarly) {
-                        const minsEarly = (WORK_HOUR * 60 + WORK_MINUTE) - (h * 60 + m);
-                        earlyList.push({
-                            id: d.id,
-                            date: data.date?.toDate?.() || null,
-                            dateStr: data.date?.toDate?.()?.toLocaleDateString() || '—',
-                            timeIn: timeInDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                            minsEarly
-                        });
-                    }
-                }
-
-                if (data.timeOut && data.timeOut !== 'Active') {
-                    const timeOutDate = data.timeOut?.toDate?.() || new Date(data.timeOut);
-                    const hOut = timeOutDate.getHours();
-                    const mOut = timeOutDate.getMinutes();
-                    const isOvertime = hOut > OUT_HOUR || (hOut === OUT_HOUR && mOut > OUT_MINUTE);
-
-                    if (isOvertime) {
-                        const minsOvertime = (hOut * 60 + mOut) - (OUT_HOUR * 60 + OUT_MINUTE);
-                        overtimeList.push({
-                            id: `${d.id}_ot`,
-                            date: data.date?.toDate?.() || null,
-                            dateStr: data.date?.toDate?.()?.toLocaleDateString() || '—',
-                            timeOut: timeOutDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                            minsOvertime
-                        });
-                    }
-                }
+                
+                const timeInStr = data.timeIn?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '—';
+                const timeOutStr = data.timeOut === 'Active' 
+                    ? 'Active' 
+                    : data.timeOut?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '—';
+                    
+                list.push({
+                    id: d.id,
+                    date: data.date?.toDate?.() || null,
+                    dateStr: data.date?.toDate?.()?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || '—',
+                    timeIn: timeInStr,
+                    timeOut: timeOutStr,
+                    totalHours: data.totalHours != null ? data.totalHours.toFixed(1) : '—'
+                });
             });
 
-            earlyList.sort((a, b) => (b.date || 0) - (a.date || 0));
-            overtimeList.sort((a, b) => (b.date || 0) - (a.date || 0));
-
-            setEarlyBirds(earlyList);
-            setOvertimes(overtimeList);
+            list.sort((a, b) => (b.date || 0) - (a.date || 0));
+            setAttendance(list);
         } catch (err) {
             console.error('Error fetching history:', err);
         }
@@ -141,40 +113,15 @@ export default function EmployeeHistoryModal({ isOpen, onClose, employee }) {
                         </div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                            {/* Emergency Contact Section */}
+                            {/* Attendance History Section */}
                             <div>
                                 <h3 style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: '8px', color: '#374151', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    Emergency Contact
+                                    <Clock size={18} color="#2563eb" /> Attendance History
                                 </h3>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', backgroundColor: '#f0fdf4', padding: '16px', borderRadius: '8px', border: '1px solid #dcfce7' }}>
-                                    <div>
-                                        <p style={{ margin: '0 0 4px', fontSize: '0.875rem', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
-                                            <HeartPulse size={14} /> Contact Name
-                                        </p>
-                                        <p style={{ margin: 0, fontWeight: 500, color: employee.emergencyContactName ? '#111827' : '#9ca3af', fontStyle: employee.emergencyContactName ? 'normal' : 'italic', fontSize: '1rem' }}>
-                                            {employee.emergencyContactName || 'Not Set'}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p style={{ margin: '0 0 4px', fontSize: '0.875rem', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
-                                            <Phone size={14} /> Contact Number
-                                        </p>
-                                        <p style={{ margin: 0, fontWeight: 500, color: employee.emergencyContactNumber ? '#111827' : '#9ca3af', fontStyle: employee.emergencyContactNumber ? 'normal' : 'italic', fontSize: '1rem' }}>
-                                            {employee.emergencyContactNumber || 'Not Set'}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Early Bird Log Section */}
-                            <div>
-                                <h3 style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: '8px', color: '#374151', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Sunrise size={18} color="#eab308" /> Early Bird Records
-                                </h3>
-                                {earlyBirds.length === 0 ? (
+                                {attendance.length === 0 ? (
                                     <div style={{ textAlign: 'center', color: '#6b7280', padding: '32px 0', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px dashed #d1d5db' }}>
-                                        <Sunrise size={32} style={{ color: '#d1d5db', marginBottom: '8px' }} />
-                                        <p style={{ margin: 0 }}>No early arrival records found.</p>
+                                        <Clock size={32} style={{ color: '#d1d5db', marginBottom: '8px' }} />
+                                        <p style={{ margin: 0 }}>No attendance records found.</p>
                                     </div>
                                 ) : (
                                     <table className="data-table">
@@ -182,55 +129,17 @@ export default function EmployeeHistoryModal({ isOpen, onClose, employee }) {
                                             <tr>
                                                 <th>Date</th>
                                                 <th>Time In</th>
-                                                <th>Mins Early (Before 8:30)</th>
+                                                <th>Time Out</th>
+                                                <th>Total Hours</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {earlyBirds.map(record => (
+                                            {attendance.map(record => (
                                                 <tr key={record.id}>
                                                     <td style={{ fontWeight: 500 }}>{record.dateStr}</td>
                                                     <td><span className="badge badge-success">{record.timeIn}</span></td>
-                                                    <td style={{ color: '#16a34a', fontWeight: 600 }}>
-                                                        {record.minsEarly >= 60
-                                                            ? `${Math.floor(record.minsEarly / 60)}h ${record.minsEarly % 60}m`
-                                                            : `${record.minsEarly}m`}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                )}
-                            </div>
-
-                            {/* Overtime Log Section */}
-                            <div>
-                                <h3 style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: '8px', color: '#374151', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Clock size={18} color="#f97316" /> Overtime Records
-                                </h3>
-                                {overtimes.length === 0 ? (
-                                    <div style={{ textAlign: 'center', color: '#6b7280', padding: '32px 0', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px dashed #d1d5db' }}>
-                                        <Clock size={32} style={{ color: '#d1d5db', marginBottom: '8px' }} />
-                                        <p style={{ margin: 0 }}>No overtime records found.</p>
-                                    </div>
-                                ) : (
-                                    <table className="data-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Date</th>
-                                                <th>Time Out</th>
-                                                <th>Mins Overtime (After 5:30 PM)</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {overtimes.map(record => (
-                                                <tr key={record.id}>
-                                                    <td style={{ fontWeight: 500 }}>{record.dateStr}</td>
-                                                    <td><span className="badge badge-warning">{record.timeOut}</span></td>
-                                                    <td style={{ color: '#ea580c', fontWeight: 600 }}>
-                                                        {record.minsOvertime >= 60
-                                                            ? `${Math.floor(record.minsOvertime / 60)}h ${record.minsOvertime % 60}m`
-                                                            : `${record.minsOvertime}m`}
-                                                    </td>
+                                                    <td><span className={`badge ${record.timeOut === 'Active' ? 'badge-warning' : 'badge-info'}`}>{record.timeOut}</span></td>
+                                                    <td style={{ fontWeight: 600 }}>{record.totalHours}h</td>
                                                 </tr>
                                             ))}
                                         </tbody>
