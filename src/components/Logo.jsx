@@ -4,7 +4,7 @@ export default function Logo({ collapsed }) {
     return (
         <div className="logo">
             <div className="logo-icon">
-                <img src="/logo.png" alt="HR System Logo" style={{ width: 40, height: 40, objectFit: 'contain' }} />
+                <img src="/logo.png" alt="HR System Logo" style={{ width: 60, height: 60, objectFit: 'contain' }} />
             </div>
             {!collapsed && (
                 <div className="logo-text">
@@ -15,3 +15,4 @@ export default function Logo({ collapsed }) {
         </div>
     );
 }
+
